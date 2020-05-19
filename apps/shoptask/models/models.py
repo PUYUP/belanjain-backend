@@ -99,6 +99,15 @@ if not is_model_registered('shoptask', 'Category'):
 
 
 # 11
+if not is_model_registered('shoptask', 'Brand'):
+    class Brand(AbstractBrand):
+        class Meta(AbstractBrand.Meta):
+            db_table = 'shoptask_brand'
+
+    __all__.append('Brand')
+
+
+# 12
 if not is_model_registered('shoptask', 'Catalog'):
     class Catalog(AbstractCatalog):
         class Meta(AbstractCatalog.Meta):
@@ -107,7 +116,7 @@ if not is_model_registered('shoptask', 'Catalog'):
     __all__.append('Catalog')
 
 
-# 12
+# 13
 if not is_model_registered('shoptask', 'CatalogAttribute'):
     class CatalogAttribute(AbstractCatalogAttribute):
         class Meta(AbstractCatalogAttribute.Meta):
@@ -116,7 +125,7 @@ if not is_model_registered('shoptask', 'CatalogAttribute'):
     __all__.append('CatalogAttribute')
 
 
-# 13
+# 14
 if not is_model_registered('shoptask', 'ShippingAddress'):
     class ShippingAddress(AbstractShippingAddress):
         class Meta(AbstractShippingAddress.Meta):
@@ -125,7 +134,7 @@ if not is_model_registered('shoptask', 'ShippingAddress'):
     __all__.append('ShippingAddress')
 
 
-# 14
+# 15
 if not is_model_registered('shoptask', 'PurchaseShipping'):
     class PurchaseShipping(AbstractPurchaseShipping):
         class Meta(AbstractPurchaseShipping.Meta):
@@ -134,7 +143,7 @@ if not is_model_registered('shoptask', 'PurchaseShipping'):
     __all__.append('PurchaseShipping')
 
 
-# 15
+# 16
 if not is_model_registered('shoptask', 'ExtraCharge'):
     class ExtraCharge(AbstractExtraCharge):
         class Meta(AbstractExtraCharge.Meta):
@@ -143,7 +152,7 @@ if not is_model_registered('shoptask', 'ExtraCharge'):
     __all__.append('ExtraCharge')
 
 
-# 16
+# 17
 if not is_model_registered('shoptask', 'GoodsExtraCharge'):
     class GoodsExtraCharge(AbstractGoodsExtraCharge):
         class Meta(AbstractGoodsExtraCharge.Meta):

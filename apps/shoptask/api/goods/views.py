@@ -1,7 +1,8 @@
 from django.conf import settings
 from django.db import transaction
 from django.db.models import (
-    Q, F, Prefetch, Case, When, Value, Count, Sum, BooleanField, IntegerField)
+    Q, F, Prefetch, Case, When, Value, Count, Sum, BooleanField, IntegerField,
+    CharField, Subquery, OuterRef)
 from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils.decorators import method_decorator
@@ -27,6 +28,7 @@ from ..purchase.serializers import PurchaseSinglePlainSerializer
 from ..necessary.serializers import NecessarySingleSerializer
 
 Goods = get_model('shoptask', 'Goods')
+GoodsCatalog = get_model('shoptask', 'GoodsCatalog')
 Purchase = get_model('shoptask', 'Purchase')
 Necessary = get_model('shoptask', 'Necessary')
 
@@ -81,8 +83,13 @@ class GoodsApiView(viewsets.ViewSet):
         except ValidationError as err:
             raise NotAcceptable(detail=_(' '.join(err.messages)))
 
+        goods_catalog = GoodsCatalog.objects.filter(id=OuterRef('goods_catalog__id'))
+
         # All objects
-        return Goods.objects.prefetch_related(Prefetch('customer'), Prefetch('purchase'), Prefetch('necessary')) \
+        return Goods.objects.prefetch_related(Prefetch('customer'), Prefetch('purchase'),
+                                              Prefetch('necessary'), Prefetch('goods_catalogs'),
+                                              Prefetch('goods_catalogs'), Prefetch('goods_catalogs__catalog')) \
+            .select_related('customer', 'purchase', 'necessary', 'goods_catalog', 'goods_catalog__catalog') \
             .annotate(
                 is_skip=Case(
                     When(goods_assigned__is_skip=True, then=Value(True)),
@@ -99,8 +106,13 @@ class GoodsApiView(viewsets.ViewSet):
                     default=Value(False),
                     output_field=BooleanField()
                 ),
+                is_from_catalog=Case(
+                    When(goods_catalog__isnull=False, then=Value(True)),
+                    default=Value(False),
+                    output_field=BooleanField()
+                ),
+                catalog_picture=Subquery(goods_catalog.values('catalog__pictures__value_image')[:1])
             ) \
-            .select_related('customer', 'purchase', 'necessary') \
             .filter(Q(customer_id=self.request.user.id), Q(necessary__uuid=necessary_uuid)) \
             .order_by('-date_created')
 

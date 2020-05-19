@@ -264,9 +264,9 @@ class AbstractGoodsCatalog(models.Model):
     date_created = models.DateTimeField(auto_now_add=True, null=True)
     date_updated = models.DateTimeField(auto_now=True, null=True)
 
-    goods = models.ForeignKey('shoptask.Goods', on_delete=models.CASCADE,
-                              related_name='goods_catalogs',
-                              related_query_name='goods_catalog')
+    goods = models.OneToOneField('shoptask.Goods', on_delete=models.CASCADE,
+                                 related_name='goods_catalogs',
+                                 related_query_name='goods_catalog')
     catalog = models.ForeignKey('shoptask.Catalog', on_delete=models.CASCADE,
                                 related_name='goods_catalogs',
                                 related_query_name='goods_catalog')
@@ -275,6 +275,10 @@ class AbstractGoodsCatalog(models.Model):
         abstract = True
         verbose_name = _("Goods Catalog")
         verbose_name_plural = _("Goods Catalogs")
+        constraints = [
+            models.UniqueConstraint(fields=['goods', 'catalog'],
+                                    name='unique_goods_catalog')
+        ]
 
     def __str__(self):
         return self.catalog.label

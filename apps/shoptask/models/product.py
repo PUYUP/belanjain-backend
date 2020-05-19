@@ -8,11 +8,11 @@ from django.contrib.contenttypes.fields import GenericRelation
 from utils.validators import IDENTIFIER_VALIDATOR, non_python_keyword
 from apps.shoptask.utils.constant import (
     DRAFT, CATALOG_STATUS, DIMENSION_METRICS, WEIGHT_METRICS,
-    CATALOG_ATTRIBUTES, CATALOG_ATTRIBUTE_METRICS)
+    CATALOG_ATTRIBUTES, CATALOG_ATTRIBUTE_METRICS, METRICS)
 
 
 class AbstractCategory(models.Model):
-    _UPLOAD_TO = 'images/icon'
+    _UPLOAD_TO = 'images/icon/category'
 
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     date_created = models.DateTimeField(auto_now_add=True, null=True)
@@ -40,6 +40,32 @@ class AbstractCategory(models.Model):
         return self.label
 
 
+class AbstractBrand(models.Model):
+    _UPLOAD_TO = 'images/icon/brand'
+
+    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
+    date_created = models.DateTimeField(auto_now_add=True, null=True)
+    date_updated = models.DateTimeField(auto_now=True, null=True)
+
+    label = models.CharField(max_length=255)
+    excerpt = models.TextField(blank=True, max_length=255, null=True)
+    description = models.TextField(blank=True)
+    sort_order = models.IntegerField(default=1, blank=True)
+    icon = models.ImageField(upload_to=_UPLOAD_TO, blank=True, max_length=500)
+
+    is_active = models.BooleanField(default=True)
+    is_delete = models.BooleanField(default=False)
+    catalog_count = models.IntegerField(editable=False, default=0)
+
+    class Meta:
+        abstract = True
+        verbose_name = _("Brand")
+        verbose_name_plural = _("Brands")
+
+    def __str__(self):
+        return self.label
+
+
 class AbstractCatalog(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     date_created = models.DateTimeField(auto_now_add=True, null=True)
@@ -48,6 +74,9 @@ class AbstractCatalog(models.Model):
     category = models.ForeignKey('shoptask.Category', on_delete=models.SET_NULL,
                                  null=True, related_name='catalogs',
                                  related_query_name='catalog')
+    brand = models.ForeignKey('shoptask.Brand', on_delete=models.SET_NULL,
+                              null=True, blank=True, related_name='catalogs',
+                              related_query_name='catalog')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
                              null=True, related_name='catalogs',
                              related_query_name='catalog')
@@ -55,6 +84,8 @@ class AbstractCatalog(models.Model):
 
     sku = models.CharField(max_length=255)
     label = models.CharField(max_length=255)
+    default_metric = models.CharField(choices=METRICS, blank=True, max_length=255, null=True,
+                                      validators=[IDENTIFIER_VALIDATOR, non_python_keyword])
     excerpt = models.TextField(blank=True, max_length=255, null=True)
     description = models.TextField(blank=True)
     status = models.CharField(choices=CATALOG_STATUS, default=DRAFT, max_length=255,

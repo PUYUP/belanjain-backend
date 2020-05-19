@@ -2,6 +2,7 @@ from django.utils.translation import ugettext_lazy as _
 
 # GLOBAL
 DRAFT = 'draft'
+PUBLISH = 'publish'
 
 # PURCHASE STATUS
 SUBMITTED = 'submitted'
@@ -29,7 +30,9 @@ KILOGRAM = 'kg'
 HECTOGRAM = 'hg'  # similar to ONS
 GRAM = 'g'
 MILLIGRAM = 'mg'
+LITER = 'liter'
 PACK = 'pack'
+POUCH = 'pouch'
 PIECE = 'piece'
 BUNCH = 'bunch'
 SACK = 'sack'
@@ -39,7 +42,9 @@ METRICS = (
     (HECTOGRAM, _("Ons")),
     (GRAM, _("Gram")),
     (MILLIGRAM, _("Miligram")),
+    (LITER, _("Liter")),
     (PACK, _("Bungkus")),
+    (POUCH, _("Kantung")),
     (PIECE, _("Buah")),
     (BUNCH, _("Ikat")),
     (SACK, _("Karung / Sak")),
@@ -48,7 +53,6 @@ METRICS = (
 
 
 # Catalog
-PUBLISH = 'publish'
 CATALOG_STATUS = (
     (DRAFT, _("Draft")),
     (PUBLISH, _("Publish")),
