@@ -33,6 +33,7 @@ class CatalogAttributeInline(admin.StackedInline):
 
 class CatalogExtend(admin.ModelAdmin):
     model = Catalog
+    list_display = ('label', 'default_metric',)
     inlines = [AttachmentInline, CatalogAttributeInline,]
 
 

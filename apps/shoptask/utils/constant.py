@@ -33,6 +33,7 @@ MILLIGRAM = 'mg'
 LITER = 'liter'
 PACK = 'pack'
 POUCH = 'pouch'
+BOTTLE = 'bottle'
 PIECE = 'piece'
 BUNCH = 'bunch'
 SACK = 'sack'
@@ -45,6 +46,7 @@ METRICS = (
     (LITER, _("Liter")),
     (PACK, _("Bungkus")),
     (POUCH, _("Kantung")),
+    (BOTTLE, _("Botol")),
     (PIECE, _("Buah")),
     (BUNCH, _("Ikat")),
     (SACK, _("Karung / Sak")),

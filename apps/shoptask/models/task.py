@@ -58,6 +58,14 @@ class AbstractPurchase(models.Model):
     def __str__(self):
         return self.label
 
+    @property
+    def shipping(self):
+        return self.purchase_shippings.first()
+
+    @property
+    def assigned(self):
+        return self.purchase_assigneds.first()
+
 
 class AbstractPurchaseStatusChange(models.Model):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)

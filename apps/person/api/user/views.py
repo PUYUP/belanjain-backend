@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from rest_framework import status as response_status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, NotAcceptable
-from rest_framework.pagination import PageNumberPagination
+from rest_framework.pagination import LimitOffsetPagination
 
 # JWT
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -40,7 +40,7 @@ from apps.person.utils.permissions import IsUserSelfOrReject
 Account = get_model('person', 'Account')
 
 # Define to avoid used ...().paginate__
-PAGINATOR = PageNumberPagination()
+_PAGINATOR = LimitOffsetPagination()
 
 
 class UserApiView(viewsets.ViewSet):
@@ -90,10 +90,13 @@ class UserApiView(viewsets.ViewSet):
     # Return a response
     def get_response(self, serializer, serializer_parent=None):
         response = dict()
-        response['count'] = PAGINATOR.page.paginator.count
+        response['count'] = _PAGINATOR.count
+        response['per_page'] = settings.PAGINATION_PER_PAGE
         response['navigate'] = {
-            'previous': PAGINATOR.get_previous_link(),
-            'next': PAGINATOR.get_next_link()
+            'offset': _PAGINATOR.offset,
+            'limit': _PAGINATOR.limit,
+            'previous': _PAGINATOR.get_previous_link(),
+            'next': _PAGINATOR.get_next_link(),
         }
         response['results'] = serializer.data
         return Response(response, status=response_status.HTTP_200_OK)

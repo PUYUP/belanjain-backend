@@ -6,7 +6,7 @@ from .base import *
 
 # GLOBAL CONFIGURATIONS
 PROJECT_NAME = 'Belanjain'
-PROJECT_WEBSITE = 'www.saturn.com'
+PROJECT_WEBSITE = 'www.belanjain.com'
 PAGINATION_PER_PAGE = 20
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 LOGIN_WITH_JWT = True
@@ -116,7 +116,6 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_VERSIONING_CLASS': 'rest_framework.versioning.'
                                 'NamespaceVersioning',
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.'
-                                'PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
     'PAGE_SIZE': PAGINATION_PER_PAGE
 }

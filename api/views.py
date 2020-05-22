@@ -31,5 +31,9 @@ class RootApiView(APIView):
                                  format=format, current_app='shoptask'),
                 'catalogs': reverse('shoptask:catalog-list', request=request,
                                     format=format, current_app='shoptask'),
+                'categories': reverse('shoptask:category-list', request=request,
+                                      format=format, current_app='shoptask'),
+                'brands': reverse('shoptask:brand-list', request=request,
+                                  format=format, current_app='shoptask'),
             },
         })
