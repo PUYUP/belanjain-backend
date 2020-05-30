@@ -20,7 +20,7 @@ from apps.shoptask.utils.constant import ALLOWED_DELETE_STATUS
 
 from .serializers import (
     NecessarySerializer,
-    NecessaryCreateSerializer,
+    NecessaryFactorySerializer,
     NecessarySingleSerializer)
 
 Necessary = get_model('shoptask', 'Necessary')
@@ -80,7 +80,7 @@ class NecessaryApiView(viewsets.ViewSet):
             return [permission() for permission in self.permission_classes]
 
     # Get a objects
-    def get_object(self, uuid=None):
+    def get_object(self, uuid=None, is_update=False):
         purchase_uuid = self.request.query_params.get('purchase_uuid', None)
         annotate = {
             'total_count': Count('goods', distinct=False),
@@ -90,7 +90,6 @@ class NecessaryApiView(viewsets.ViewSet):
                     default=Value(0),
                     output_field=IntegerField()
                 )
-                , distinct=True
             ),
             'skip_count': Sum(
                 Case(
@@ -98,7 +97,6 @@ class NecessaryApiView(viewsets.ViewSet):
                     default=Value(0),
                     output_field=IntegerField()
                 )
-                , distinct=True
             ),
             'accept_count': Sum(
                 Case(
@@ -106,9 +104,14 @@ class NecessaryApiView(viewsets.ViewSet):
                     default=Value(0),
                     output_field=IntegerField()
                 )
-                , distinct=True
             ),
-           'left_count': F('total_count') - F('done_count')
+           'left_count': Sum(
+                Case(
+                    When(goods__goods_assigned__isnull=True, then=Value(1)),
+                    default=Value(0),
+                    output_field=IntegerField()
+                )
+            )
         }
 
         # Single object
@@ -119,9 +122,12 @@ class NecessaryApiView(viewsets.ViewSet):
                 raise NotAcceptable(detail=_(' '.join(err.messages)))
 
             try:
-                return Necessary.objects \
-                    .annotate(**annotate) \
-                    .get(uuid=uuid, customer_id=self.request.user.id)
+                queryset = Necessary.objects \
+                    .filter(uuid=uuid, customer_id=self.request.user.id) \
+                    .annotate(**annotate)
+                if is_update:
+                    return queryset.select_for_update().get()
+                return queryset.get()
             except ObjectDoesNotExist:
                 raise NotFound()
 
@@ -176,7 +182,7 @@ class NecessaryApiView(viewsets.ViewSet):
     @transaction.atomic
     def create(self, request, format=None):
         context = {'request': self.request}
-        serializer = NecessaryCreateSerializer(data=request.data, context=context)
+        serializer = NecessaryFactorySerializer(data=request.data, context=context)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             queryset = self.get_object(uuid=serializer.data['uuid'])
@@ -189,9 +195,12 @@ class NecessaryApiView(viewsets.ViewSet):
     @transaction.atomic
     def partial_update(self, request, uuid=None, format=None):
         context = {'request': self.request}
+        queryset = self.get_object(uuid=uuid, is_update=True)
 
-        queryset = self.get_object(uuid=uuid)
-        serializer = NecessaryCreateSerializer(
+        # check permission
+        self.check_object_permissions(self.request, queryset)
+
+        serializer = NecessaryFactorySerializer(
             queryset, data=request.data, partial=True, context=context)
 
         if serializer.is_valid(raise_exception=True):
@@ -219,6 +228,9 @@ class NecessaryApiView(viewsets.ViewSet):
             return NotAcceptable(_("Action rejected. Delete failed!"))
 
         if queryset.exists():
+            # check permission
+            self.check_object_permissions(self.request, queryset.first())
+
             queryset.delete()
             return Response(
                 {'detail': _("Delete success!")},

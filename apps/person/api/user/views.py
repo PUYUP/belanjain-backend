@@ -74,11 +74,14 @@ class UserApiView(viewsets.ViewSet):
             return [permission() for permission in self.permission_classes]
 
     # Get a objects
-    def get_object(self, id=None):
+    def get_object(self, id=None, is_update=False):
         # Single object
         if id:
             try:
-                return User.objects.get(id=id)
+                queryset = User.objects
+                if is_update:
+                    return queryset.select_for_update().get(id=id)
+                return queryset.get(id=id)
             except ObjectDoesNotExist:
                 raise NotFound()
 
@@ -105,7 +108,7 @@ class UserApiView(viewsets.ViewSet):
     def list(self, request, format=None):
         context = {'request': self.request}
         queryset = self.get_object()
-        queryset_paginator = PAGINATOR.paginate_queryset(queryset, request)
+        queryset_paginator = _PAGINATOR.paginate_queryset(queryset, request)
         serializer = UserSerializer(queryset_paginator, many=True, context=context)
         return self.get_response(serializer)
 
@@ -136,7 +139,7 @@ class UserApiView(viewsets.ViewSet):
         context = {'request': self.request}
 
         # Single object
-        instance = self.get_object(id=id)
+        instance = self.get_object(id=id, is_update=True)
 
         # Append file
         if request.FILES:

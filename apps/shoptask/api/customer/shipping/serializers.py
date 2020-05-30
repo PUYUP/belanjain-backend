@@ -11,7 +11,7 @@ ShippingAddress = get_model('shoptask', 'ShippingAddress')
 
 class ShippingAddressSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name='shoptask:shipping_address-detail', lookup_field='uuid', read_only=True)
+        view_name='customer:shipping_address-detail', lookup_field='uuid', read_only=True)
 
     class Meta:
         model = ShippingAddress
@@ -24,7 +24,7 @@ class ShippingAddressSingleSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class ShippingAddressCreateSerializer(serializers.ModelSerializer):
+class ShippingAddressFactorySerializer(serializers.ModelSerializer):
     customer = serializers.HiddenField(default=CurrentUserDefault())
 
     class Meta:

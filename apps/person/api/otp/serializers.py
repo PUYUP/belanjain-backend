@@ -36,7 +36,7 @@ class OTPCodeListSerializer(serializers.ModelSerializer):
         fields = ('email', 'telephone', 'otp_code', 'otp_hash',)
 
 
-class OTPCodeCreateSerializer(OTPCodeFieldsModelSerializer, serializers.ModelSerializer):
+class OTPCodeFactorySerializer(OTPCodeFieldsModelSerializer, serializers.ModelSerializer):
     class Meta:
         model = OTPCode
         fields = ('email', 'telephone', 'identifier', 'otp_hash',)

@@ -11,6 +11,9 @@ from apps.person.utils.constant import CUSTOMER
 from apps.shoptask.utils.constant import DRAFT, SUBMITTED, STATUS_CHOICES, METRICS
 from apps.shoptask.utils.log import CreateChangeLog
 
+from django_currentuser.middleware import (
+    get_current_user, get_current_authenticated_user)
+
 
 class AbstractPurchase(models.Model):
     """
@@ -22,6 +25,8 @@ class AbstractPurchase(models.Model):
     - kebutuhan bayi
     - ect
     """
+    __original_status = None
+
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     date_created = models.DateTimeField(auto_now_add=True, null=True)
     date_updated = models.DateTimeField(auto_now=True, null=True)
@@ -37,7 +42,6 @@ class AbstractPurchase(models.Model):
     label = models.CharField(max_length=255)
     excerpt = models.TextField(blank=True, max_length=255, null=True)
     description = models.TextField(blank=True)
-    schedule = models.DateTimeField()
     merchant = models.TextField(blank=True,
                                 help_text=_("Who merchant prefered by Customer?"
                                             "Something like Alfamart at Paal Merah"))
@@ -45,10 +49,6 @@ class AbstractPurchase(models.Model):
                               validators=[IDENTIFIER_VALIDATOR,
                                           non_python_keyword],
                               max_length=255)
-
-    necessary_count = models.IntegerField(editable=False, default=0)
-    goods_count = models.IntegerField(editable=False, default=0)
-    bill_summary = models.BigIntegerField(editable=False, default=0)
 
     class Meta:
         abstract = True
@@ -58,69 +58,31 @@ class AbstractPurchase(models.Model):
     def __str__(self):
         return self.label
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__original_status = self.status
+
+    def save(self, force_insert=False, force_update=False, *args, **kwargs):
+        # create change log for status
+        if self.status != self.__original_status:
+            changelog = CreateChangeLog(
+                obj=self,
+                obj_id=self.id,
+                column='status',
+                old_value=self.__original_status,
+                new_value=self.status
+            ).save()
+
+        super().save(force_insert, force_update, *args, **kwargs)
+        self.__original_status = self.status
+
     @property
     def shipping(self):
-        return self.purchase_shippings.first()
+        return self.purchase_deliveries.first()
 
     @property
     def assigned(self):
         return self.purchase_assigneds.first()
-
-
-class AbstractPurchaseStatusChange(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
-    date_created = models.DateTimeField(auto_now_add=True, null=True)
-    date_updated = models.DateTimeField(auto_now=True, null=True)
-
-    purchase = models.ForeignKey('shoptask.Purchase',
-                                 on_delete=models.CASCADE,
-                                 related_name='purchase_status_changes',
-                                 related_query_name='purchase_status_change')
-    changed_by = models.ForeignKey(settings.AUTH_USER_MODEL,
-                                   on_delete=models.SET_NULL, null=True,
-                                   related_name='purchase_status_changes',
-                                   related_query_name='purchase_status_change')
-
-    old_status = models.CharField(choices=STATUS_CHOICES, max_length=255,
-                                  validators=[IDENTIFIER_VALIDATOR,
-                                              non_python_keyword])
-    new_status = models.CharField(choices=STATUS_CHOICES, max_length=255,
-                                  validators=[IDENTIFIER_VALIDATOR,
-                                              non_python_keyword])
-
-    class Meta:
-        abstract = True
-        verbose_name = _("Purchase Status Change")
-        verbose_name_plural = _("Purchase Status Changes")
-        ordering = ['-date_created']
-
-    def __str__(self):
-        return _('{purchase} has changed status from {old_status} to {new_status}').format(
-            purchase=self.purchase.label, old_status=self.get_old_status_display,
-            new_status=self.get_new_status_display)
-
-
-class AbstractPurchaseShipping(models.Model):
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
-    date_created = models.DateTimeField(auto_now_add=True, null=True)
-    date_updated = models.DateTimeField(auto_now=True, null=True)
-
-    purchase = models.ForeignKey('shoptask.Purchase',
-                                 on_delete=models.CASCADE,
-                                 related_name='purchase_shippings',
-                                 related_query_name='purchase_shipping')
-    shipping_to = models.ForeignKey('shoptask.ShippingAddress',
-                                    on_delete=models.SET_NULL, null=True,
-                                    related_name='purchase_shippings',
-                                    related_query_name='purchase_shipping')
-
-    class Meta:
-        abstract = True
-        verbose_name = _("Purchase Shipping")
-        verbose_name_plural = _("Purchase Shippings")
-
-    def __str__(self):
-        return self.shipping_to.label
 
 
 class AbstractNecessary(models.Model):
@@ -160,7 +122,6 @@ class AbstractNecessary(models.Model):
     label = models.CharField(max_length=255)
     excerpt = models.TextField(blank=True, max_length=255, null=True)
     description = models.TextField(blank=True)
-    goods_count = models.IntegerField(editable=False, default=0)
 
     class Meta:
         abstract = True

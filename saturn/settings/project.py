@@ -1,3 +1,6 @@
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
+
 from datetime import timedelta
 from django.contrib.messages import constants as messages
 
@@ -18,6 +21,17 @@ STRICT_EMAIL_DUPLICATE = True
 STRICT_TELEPHONE = True
 STRICT_TELEPHONE_VERIFIED = False
 STRICT_TELEPHONE_DUPLICATE = True
+
+
+# Sentry
+sentry_sdk.init(
+    dsn="https://7d37cca26ab64d1ea3aeb4412108012e@o400235.ingest.sentry.io/5258495",
+    integrations=[DjangoIntegration()],
+
+    # If you wish to associate users to errors (assuming you are using
+    # django.contrib.auth) you may enable sending PII data.
+    send_default_pii=True
+)
 
 
 # Application definition

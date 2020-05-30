@@ -1,0 +1,2 @@
+Saat Purchase di Assigned ke Operator maka rubah status Purchase jadi 'assigned'
+Kemudian Operator tap "Terima" maka Purchase status jadi 'processed'

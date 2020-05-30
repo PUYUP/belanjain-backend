@@ -11,7 +11,6 @@ from utils.validators import check_uuid
 from apps.person.utils.auth import CurrentUserDefault
 from apps.shoptask.utils.constant import DRAFT, SUBMITTED, CATALOG_ATTRIBUTE_METRICS
 
-from apps.shoptask.api.customer.shipping.serializers import ShippingAddressSingleSerializer
 from apps.person.api.user.serializers import SingleUserSerializer
 
 Catalog = get_model('shoptask', 'Catalog')
@@ -26,7 +25,7 @@ class AttachmentSerializer(serializers.ModelSerializer):
 
 class CatalogSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name='shoptask:catalog-detail', lookup_field='uuid',
+        view_name='customer:catalog-detail', lookup_field='uuid',
         read_only=True)
     picture = serializers.SerializerMethodField(read_only=True)
     # is_selected = serializers.BooleanField(read_only=True)

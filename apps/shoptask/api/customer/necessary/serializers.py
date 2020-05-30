@@ -10,7 +10,6 @@ from utils.validators import check_uuid
 from apps.person.utils.auth import CurrentUserDefault
 from apps.shoptask.utils.constant import DRAFT, SUBMITTED
 
-from apps.shoptask.api.customer.shipping.serializers import ShippingAddressSingleSerializer
 from apps.person.api.user.serializers import SingleUserSerializer
 
 Necessary = get_model('shoptask', 'Necessary')
@@ -19,7 +18,7 @@ Purchase = get_model('shoptask', 'Purchase')
 
 class NecessarySerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(
-        view_name='shoptask:necessary-detail', lookup_field='uuid',
+        view_name='customer:necessary-detail', lookup_field='uuid',
         read_only=True)
     total_count = serializers.IntegerField(read_only=True)
     done_count = serializers.IntegerField(read_only=True)
@@ -39,13 +38,14 @@ class NecessarySingleSerializer(serializers.ModelSerializer):
     skip_count = serializers.IntegerField(read_only=True)
     accept_count = serializers.IntegerField(read_only=True)
     left_count = serializers.IntegerField(read_only=True)
+    bill_summary = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Necessary
         fields = '__all__'
 
 
-class NecessaryCreateSerializer(serializers.ModelSerializer):
+class NecessaryFactorySerializer(serializers.ModelSerializer):
     customer = serializers.HiddenField(default=CurrentUserDefault())
     purchase_uuid = serializers.UUIDField(required=True, write_only=True)
 

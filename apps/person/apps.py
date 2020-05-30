@@ -14,4 +14,4 @@ class PersonConfig(AppConfig):
         OTPCode = get_model('person', 'OTPCode')
 
         post_save.connect(user_save_handler, sender=User, dispatch_uid='user_save_signal')
-        post_save.connect(otpcode_save_handler, sender=OTPCode, dispatch_uid='otpcode_savee_signal')
+        post_save.connect(otpcode_save_handler, sender=OTPCode, dispatch_uid='otpcode_save_signal')

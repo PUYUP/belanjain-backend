@@ -19,7 +19,7 @@ from apps.shoptask.utils.permissions import IsCustomerOrReadOnly
 from .serializers import (
     ShippingAddressSerializer,
     ShippingAddressSingleSerializer,
-    ShippingAddressCreateSerializer,
+    ShippingAddressFactorySerializer,
     ShippingAddressUpdateSerializer)
 
 ShippingAddress = get_model('shoptask', 'ShippingAddress')
@@ -52,7 +52,7 @@ class ShippingAddressApiView(viewsets.ViewSet):
             return [permission() for permission in self.permission_classes]
 
     # Get a objects
-    def get_object(self, uuid=None):
+    def get_object(self, uuid=None, is_update=False):
         # Single object
         if uuid:
             try:
@@ -61,8 +61,11 @@ class ShippingAddressApiView(viewsets.ViewSet):
                 raise NotAcceptable(detail=_(' '.join(err.messages)))
 
             try:
-                return ShippingAddress.objects \
-                    .get(uuid=uuid, customer_id=self.request.user.id)
+                queryset = ShippingAddress.objects \
+                    .filter(uuid=uuid, customer_id=self.request.user.id)
+                if is_update:
+                    return queryset.select_for_update().get()
+                return queryset.get()
             except ObjectDoesNotExist:
                 raise NotFound()
 
@@ -108,7 +111,7 @@ class ShippingAddressApiView(viewsets.ViewSet):
     @transaction.atomic
     def create(self, request, format=None):
         context = {'request': self.request}
-        serializer = ShippingAddressCreateSerializer(data=request.data, context=context)
+        serializer = ShippingAddressFactorySerializer(data=request.data, context=context)
         if serializer.is_valid(raise_exception=True):
             serializer.save()
             return Response(serializer.data, status=response_status.HTTP_201_CREATED)
@@ -119,8 +122,11 @@ class ShippingAddressApiView(viewsets.ViewSet):
     @transaction.atomic
     def partial_update(self, request, uuid=None, format=None):
         context = {'request': self.request}
+        queryset = self.get_object(uuid=uuid, is_update=True)
 
-        queryset = self.get_object(uuid=uuid)
+        # check permission
+        self.check_object_permissions(self.request, queryset)
+
         serializer = ShippingAddressUpdateSerializer(
             queryset, data=request.data, partial=True, context=context)
 
@@ -142,9 +148,15 @@ class ShippingAddressApiView(viewsets.ViewSet):
             raise NotAcceptable(detail=_(' '.join(err.messages)))
 
         queryset = ShippingAddress.objects.filter(uuid=uuid, customer_id=request.user.id)
-        if queryset.exists():
-            queryset.delete()
+        if not queryset.exists():
+            return NotAcceptable(_("Action rejected. Delete failed!"))
 
-        return Response(
-            {'detail': _("Delete success!")},
-            status=response_status.HTTP_204_NO_CONTENT)
+        if queryset.exists():
+            # check permission
+            self.check_object_permissions(self.request, queryset.first())
+
+            queryset.delete()
+            return Response(
+                {'detail': _("Delete success!")},
+                status=response_status.HTTP_204_NO_CONTENT)
+        return NotAcceptable(_("Something wrong!"))

@@ -14,8 +14,6 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.exceptions import NotAcceptable
 
-from pprint import pprint
-
 # PROJECT UTILS
 from utils.generals import get_model
 from apps.person.utils.constant import REGISTER_VALIDATION
@@ -140,12 +138,21 @@ class UserSerializer(serializers.ModelSerializer):
 
 class SingleUserSerializer(DynamicFieldsModelSerializer, serializers.ModelSerializer):
     biography = serializers.CharField(read_only=True, source='profile.biography')
-    picture = serializers.ImageField(read_only=True, source='profile.picture')
+    picture = serializers.SerializerMethodField(read_only=True)
     telephone = serializers.CharField(read_only=True, source='account.telephone')
 
     class Meta:
         model = User
         fields = ('id', 'username', 'first_name', 'biography', 'picture', 'telephone',)
+
+    def get_picture(self, obj):
+        request = self.context.get('request', None)
+        if not request:
+            raise NotAcceptable()
+
+        picture = getattr(obj.profile, 'picture', None)
+        if picture:
+            return request.build_absolute_uri(picture.url)
 
 
 class CreateUserSerializer(serializers.ModelSerializer):

@@ -3,7 +3,6 @@ from .project import *
 
 DEBUG = True
 
-
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 DATABASES = {
@@ -39,9 +38,8 @@ EMAIL_USE_TLS = True
 CORS_ORIGIN_ALLOW_ALL = False
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:4000',
-    'http://localhost:4200',
     'http://localhost:8100',
+    'http://localhost:8200',
 ]
 
 
@@ -52,8 +50,8 @@ CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
 CSRF_TRUSTED_ORIGINS = [
-    'localhost:4200',
     'localhost:8100',
+    'localhost:8200',
 ]
 
 

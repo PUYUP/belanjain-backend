@@ -68,8 +68,8 @@ class AbstractChangeLog(models.Model):
 
     # Generic relations
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE,
-                                     related_name='logs_status',
-                                     related_query_name='log_status',
+                                     related_name='changelogs',
+                                     related_query_name='changelog',
                                      limit_choices_to=Q(app_label='shoptask'),
                                      blank=True)
     object_id = models.PositiveIntegerField(blank=True)
@@ -79,70 +79,19 @@ class AbstractChangeLog(models.Model):
     column = models.CharField(max_length=255)
     changed_date = models.DateTimeField(auto_now_add=True, null=True)
     changed_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
-                                   null=True, related_name='logs_status',
-                                   related_query_name='log_status')
+                                   null=True, related_name='changelogs',
+                                   related_query_name='changelog')
     old_value = models.TextField(blank=True)
     new_value = models.TextField(blank=True)
 
     class Meta:
         abstract = True
         ordering = ['-date_created']
-        verbose_name = _('Log Status')
-        verbose_name_plural = _('Logs Status')
+        verbose_name = _('Changelog')
+        verbose_name_plural = _('Changelogs')
 
     def __str__(self):
         return self.new_value
-
-
-class AbstractShippingAddress(models.Model):
-    """
-    maybe a Customer has different shipping address
-    more than one address
-    ------------
-    :is_default if checked the address default for Purchase address
-    """
-    uuid = models.UUIDField(default=uuid.uuid4, editable=False)
-    date_created = models.DateTimeField(auto_now_add=True, null=True)
-    date_updated = models.DateTimeField(auto_now=True, null=True)
-
-    customer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
-                                 related_name='shippings_address',
-                                 related_query_name='shipping_address',
-                                 limit_choices_to={
-                                     'role__identifier': CUSTOMER
-                                 })
-
-    label = models.CharField(max_length=255, help_text=_("Eg; Home, Office, ect"))
-    recipient = models.CharField(max_length=255, help_text=_("Eg; Abu Bakar Ash-Shiddiq"),
-                                 blank=True)
-    telephone = models.CharField(max_length=255)
-    address = models.TextField(help_text=_("Complete address include number, building, street,"
-                                           "province, district and other detail."))
-    postal_code = models.CharField(max_length=255, blank=True)
-    latitude = models.FloatField(blank=True, null=True, verbose_name=_("Latitude"))
-    longitude = models.FloatField(blank=True, null=True, verbose_name=_("Longitude"))
-    notes = models.TextField(blank=True, help_text=_("Eg; Put in garage"))
-    is_default = models.BooleanField(default=False)
-
-    class Meta:
-        abstract = True
-        ordering = ['-date_created']
-        verbose_name = _('Shipping Address')
-        verbose_name_plural = _('Shippings Address')
-
-    def __str__(self):
-        return self.label
-
-    def save(self, *args, **kwargs):
-        # If current created set to is_default
-        # Make old is_default to false
-        if self.is_default:
-            ShippingAddress = get_model('shoptask', 'ShippingAddress')
-            old_objs = ShippingAddress.objects.filter(is_default=True, customer_id=self.customer.id)
-            if old_objs.exists():
-                old_objs.update(is_default=False)
-
-        super().save(*args, **kwargs)
 
 
 class AbstractExtraCharge(models.Model):

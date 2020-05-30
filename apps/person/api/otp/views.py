@@ -16,7 +16,7 @@ from apps.person.models.otp import _send_email
 
 from .serializers import (
     OTPCodeListSerializer,
-    OTPCodeCreateSerializer)
+    OTPCodeFactorySerializer)
 
 OTPCode = get_model('person', 'OTPCode')
 
@@ -29,7 +29,7 @@ class OTPCodeApiView(viewsets.ViewSet):
     @transaction.atomic
     def create(self, request, format=None):
         context = {'request': request}
-        serializer = OTPCodeCreateSerializer(data=request.data, context=context)
+        serializer = OTPCodeFactorySerializer(data=request.data, context=context)
         if serializer.is_valid(raise_exception=True):
             try:
                 serializer.save()

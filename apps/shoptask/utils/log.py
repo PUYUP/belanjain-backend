@@ -6,7 +6,6 @@ from django_currentuser.middleware import (
 
 class CreateChangeLog:
     def __init__(self, obj, obj_id, column, old_value, new_value):
-        self.model_name = model_name
         self.obj = obj
         self.obj_id = obj_id
         self.column = column
@@ -21,7 +20,5 @@ class CreateChangeLog:
         ct = ContentType.objects.get_for_model(self.obj, for_concrete_model=False)
         obj = ChangeLog.objects.create(content_type=ct, object_id=self.obj_id,
                                        column=self.column, old_value=self.old_value,
-                                       new_value=self.new_value)
-        obj.save()
-        obj.refresh_from_db()
+                                       new_value=self.new_value, changed_by=self.changed_by)
         return obj
